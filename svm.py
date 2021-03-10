@@ -1,0 +1,71 @@
+import warnings
+# ignore all future warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings("ignore")
+
+
+import numpy as np
+import pandas as pd
+from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+#import matplotlib.pyplot as plt
+#from sklearn.metrics import plot_confusion_matrix
+#import ppait as panda
+
+
+def run(file_name, testing_percentage, kernel_name, poly_degree, tol_val, reg):
+    df = pd.read_csv(file_name)
+    
+    #df2 = df.reindex(np.random.permutation(df.index))
+    #print(df)
+    
+    ts = (testing_percentage)/100
+    #print(ts)
+    #df = df.sample(frac=1).reset_index(drop=True)
+
+    #my_edit
+
+    x = df.drop(columns=['diagnosis'])
+    y = pd.DataFrame(df['diagnosis'])
+    #featureMeans = list(df.columns[1:11])
+
+    #X = x.loc[:,featureMeans].values
+    #Y = y.loc[:, 'diagnosis'].values
+    x.fillna(x.mean())
+    y.fillna(y.mean())
+    
+    X = x.iloc[:, :].values
+    Y = y.iloc[:, :].values
+
+    #my_edit_end
+
+    # print("X shape:",x.shape,"\nY shape",y.shape)
+    #Y.ravel()
+    X_train, X_test, Y_train, Y_test = train_test_split(X,Y, test_size=ts,random_state=109)
+    
+    sc_X = StandardScaler()
+    X_train = sc_X.fit_transform(X_train)
+    X_test = sc_X.transform(X_test)
+    #print(X_train)
+    #Y_train.ravel()
+    clf = SVC(kernel=kernel_name,degree = poly_degree, tol = tol_val,C = reg)
+    clf.fit(X_train,Y_train)
+    
+    Y_predict = clf.predict(X_test)
+    print(Y_predict)
+    cm = np.array(confusion_matrix(Y_test, Y_predict, labels=[0,1]))
+    # print(cm)
+    confusion = pd.DataFrame(cm, index = ['actual 0', 'actual 1'], columns = ['predicted 0','predicted 1'])
+    
+    sns.heatmap(confusion, annot = True)
+    plt.show()
+    results = classification_report(Y_test, Y_predict)
+    # print(results)
+    # print(clf.score(X_test, Y_test))
+    return results
+
+#run('C:/Users/user/Documents/pythonprog/ML/MLGUI/scripts/bill_authentication.csv', 20, 'linear', 3, 0.001, 1)
